@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function
 import keras
 import keras.backend as K
 import tensorflow as tf
@@ -11,7 +10,6 @@ import sys
 sys.path.insert(0, "/content/MI")
 import utils
 import loggingreporter 
-from __future__ import print_function
 import os
 from six.moves import cPickle
 from collections import defaultdict, OrderedDict
@@ -21,10 +19,23 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
-def compute_MI(cfg, ARCH_NAME,DO_LOWER, DO_BINNED):
+def compute_MI(cfg, ARCH_NAME, DO_LOWER, DO_BINNED, trn, tst):
     '''
     Function that computes the MI based on the cofiguration of the network and
     the directory the logged data is stored in
+
+    Parameters:
+    cfg (dict): configuration of the network
+    ARCH_NAME (Sting): name of the directory with the data
+    DO_LOWER (Boolean): whether to compute lower
+    DO_BINNED (Boolean): whether to compute binned
+    trn (Dataset): training dataset
+    tst (Dataset): test dataset 
+
+    Returns:
+    dict: computed MI
+    list: layers to plot
+
     '''
 
     FULL_MI           = cfg['FULL_MI']
@@ -131,11 +142,20 @@ def compute_MI(cfg, ARCH_NAME,DO_LOWER, DO_BINNED):
 
         measures[activation][epoch] = cepochdata
     
-    return measures
+    return measures, PLOT_LAYERS
 
-def print_MI(measures):
+def print_MI(measures, COLORBAR_MAX_EPOCHS, infoplane_measure, DIR_TEMPLATE, PLOT_LAYERS, ARCH_NAME):
     '''
     Function that prints the mutual information that has been computed before
+    
+    Parameters:
+    measures (dict): computed MI
+    COLORBAR_MAX_EPOCHS (Int): Highest epoch to colour
+    infoplane_measure (String): Activation function to plot
+    DIR_TEMPLATE (String): Template of the directory of the network
+    PLOT_LAYERS (list): Layers to plot
+    ARCH_NAME (String): Name of the directory
+
     '''
     max_epoch = max( (max(vals.keys()) if len(vals) else 0) for vals in measures.values())
     sm = plt.cm.ScalarMappable(cmap='gnuplot', norm=plt.Normalize(vmin=0, vmax=COLORBAR_MAX_EPOCHS))
@@ -160,15 +180,15 @@ def print_MI(measures):
             ax.plot(xmvals, ymvals, c=c, alpha=0.1, zorder=1)
             ax.scatter(xmvals, ymvals, s=20, facecolors=[c for _ in PLOT_LAYERS], edgecolor='none', zorder=2)
 
-        ax.ylim([0, 1])
-        ax.xlim([0, 12])
-        ax.xlabel('I(X;M)')
-        ax.ylabel('I(Y;M)')
-        ax.title(activation)
+        ax.set_ylim([0, 1])
+        ax.set_xlim([0, 12])
+        ax.set_xlabel('I(X;M)')
+        ax.set_ylabel('I(Y;M)')
+        ax.set_title(activation)
         
     cbaxes = fig.add_axes([1.0, 0.125, 0.03, 0.8]) 
     plt.colorbar(sm, label='Epoch', cax=cbaxes)
     plt.tight_layout()
 
-    if DO_SAVE:
-        plt.savefig('plots/' + DIR_TEMPLATE % ('infoplane_'+ARCH_NAME),bbox_inches='tight')
+   
+    plt.savefig('plots/' + DIR_TEMPLATE % ('infoplane_'+ARCH_NAME),bbox_inches='tight')
