@@ -1,4 +1,4 @@
-# xai
+# XAI
 
 This repository provides educational material on the topic of XAI. The repo takes a hands-on approach that focuses on guiding learners to improve their skills through implementing the methods themselves. 
 
